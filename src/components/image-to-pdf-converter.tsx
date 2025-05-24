@@ -1,5 +1,4 @@
 import React from "react";
-import type { DragEvent, TouchEvent } from "react";
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import {
@@ -14,14 +13,12 @@ import {
   Sparkles,
   Zap,
   Edit3,
-  Check,
-  RotateCcw,
-  ZoomIn,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
 import { useMobile } from "@/hooks/use-mobile";
+import CropCanvas from "./crop-canvas";
 
 interface ImageFile {
   file: File;
@@ -62,8 +59,6 @@ export default function ImageToPDFConverter() {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
-  // Touch handling
-  const [touchStartIndex, setTouchStartIndex] = useState<number | null>(null);
   const isMobile = useMobile();
 
   // Image editing
@@ -306,45 +301,6 @@ export default function ImageToPDFConverter() {
     setCropArea({ x1: 10, y1: 10, x2: 90, y2: 90 });
     setActiveCorner(null);
     setMagnifier({ visible: false, x: 0, y: 0, corner: null });
-  };
-
-  const closeImageEditor = () => {
-    setEditingImage(null);
-    setCropArea({ x1: 10, y1: 10, x2: 90, y2: 90 });
-    setActiveCorner(null);
-    setMagnifier({ visible: false, x: 0, y: 0, corner: null });
-  };
-
-  const getCanvasCoordinates = (clientX: number, clientY: number) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return { x: 0, y: 0 };
-
-    const rect = canvas.getBoundingClientRect();
-    const x = ((clientX - rect.left) / rect.width) * 100;
-    const y = ((clientY - rect.top) / rect.height) * 100;
-
-    return {
-      x: Math.max(0, Math.min(100, x)),
-      y: Math.max(0, Math.min(100, y)),
-    };
-  };
-
-  const getCornerAtPosition = (x: number, y: number): CornerType => {
-    const tolerance = 5;
-    const { x1, y1, x2, y2 } = cropArea;
-
-    if (Math.abs(x - x1) < tolerance && Math.abs(y - y1) < tolerance)
-      return "topLeft";
-    if (Math.abs(x - x2) < tolerance && Math.abs(y - y1) < tolerance)
-      return "topRight";
-    if (Math.abs(x - x1) < tolerance && Math.abs(y - y2) < tolerance)
-      return "bottomLeft";
-    if (Math.abs(x - x2) < tolerance && Math.abs(y - y2) < tolerance)
-      return "bottomRight";
-
-    if (x >= x1 && x <= x2 && y >= y1 && y <= y2) return "move";
-
-    return null;
   };
 
   const updateCropArea = (corner: CornerType, x: number, y: number) => {
@@ -714,121 +670,6 @@ export default function ImageToPDFConverter() {
     }
   }, [magnifier, drawMagnifier]);
 
-  // Mouse events for desktop
-  const handleCanvasMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    const { x, y } = getCanvasCoordinates(e.clientX, e.clientY);
-    const corner = getCornerAtPosition(x, y);
-    setActiveCorner(corner);
-  };
-
-  const handleCanvasMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    const { x, y } = getCanvasCoordinates(e.clientX, e.clientY);
-
-    if (activeCorner) {
-      updateCropArea(activeCorner, x, y);
-    }
-  };
-
-  const handleCanvasMouseUp = () => {
-    setActiveCorner(null);
-  };
-
-  // Touch events for mobile
-  const handleCanvasTouchStart = (e: React.TouchEvent<HTMLCanvasElement>) => {
-    e.preventDefault();
-    const touch = e.touches[0];
-    const { x, y } = getCanvasCoordinates(touch.clientX, touch.clientY);
-    const corner = getCornerAtPosition(x, y);
-
-    setActiveCorner(corner);
-
-    if (corner && corner !== "move") {
-      setMagnifier({ visible: true, x, y, corner });
-    }
-  };
-
-  const handleCanvasTouchMove = (e: React.TouchEvent<HTMLCanvasElement>) => {
-    e.preventDefault();
-    const touch = e.touches[0];
-    const { x, y } = getCanvasCoordinates(touch.clientX, touch.clientY);
-
-    if (activeCorner) {
-      updateCropArea(activeCorner, x, y);
-
-      if (magnifier.visible) {
-        setMagnifier((prev) => ({ ...prev, x, y }));
-      }
-    }
-  };
-
-  const handleCanvasTouchEnd = (e: React.TouchEvent<HTMLCanvasElement>) => {
-    e.preventDefault();
-    setActiveCorner(null);
-    setMagnifier({ visible: false, x: 0, y: 0, corner: null });
-  };
-
-  const applyCrop = async () => {
-    if (!editingImage || !imageRef.current) return;
-
-    const img = imageRef.current;
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    // Calculate crop dimensions
-    const cropX = (cropArea.x1 / 100) * img.naturalWidth;
-    const cropY = (cropArea.y1 / 100) * img.naturalHeight;
-    const cropWidth = ((cropArea.x2 - cropArea.x1) / 100) * img.naturalWidth;
-    const cropHeight = ((cropArea.y2 - cropArea.y1) / 100) * img.naturalHeight;
-
-    canvas.width = cropWidth;
-    canvas.height = cropHeight;
-
-    // Draw cropped image
-    ctx.drawImage(
-      img,
-      cropX,
-      cropY,
-      cropWidth,
-      cropHeight,
-      0,
-      0,
-      cropWidth,
-      cropHeight
-    );
-
-    // Convert to blob and create URL
-    canvas.toBlob(
-      (blob) => {
-        if (blob) {
-          const editedPreview = URL.createObjectURL(blob);
-
-          setImages((prev) =>
-            prev.map((img) =>
-              img.id === editingImage.id ? { ...img, editedPreview } : img
-            )
-          );
-
-          closeImageEditor();
-        }
-      },
-      "image/jpeg",
-      0.9
-    );
-  };
-
-  const resetCrop = () => {
-    if (!editingImage) return;
-
-    setImages((prev) =>
-      prev.map((img) =>
-        img.id === editingImage.id ? { ...img, editedPreview: undefined } : img
-      )
-    );
-
-    closeImageEditor();
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-violet-400 via-pink-300 to-cyan-300 p-4 relative overflow-hidden">
       {/* Animated background elements */}
@@ -1153,102 +994,21 @@ export default function ImageToPDFConverter() {
 
       {/* Image Editor Modal */}
       {editingImage && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 max-w-3xl w-full max-h-[95vh] overflow-auto border border-white/20 shadow-2xl">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-2xl font-bold text-white flex items-center gap-3">
-                <Edit3 className="h-6 w-6" />
-                Crop Image
-                {isMobile && <ZoomIn className="h-5 w-5 text-cyan-300" />}
-              </h3>
-              <Button
-                onClick={closeImageEditor}
-                variant="outline"
-                size="icon"
-                className="bg-white/10 border-white/20 text-white hover:bg-white/20 rounded-xl"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-
-            <div className="space-y-6">
-              <div className="bg-white/5 rounded-2xl p-4 relative">
-                <canvas
-                  ref={canvasRef}
-                  className="max-w-full h-auto mx-auto rounded-lg cursor-crosshair touch-none"
-                  onMouseDown={handleCanvasMouseDown}
-                  onMouseMove={handleCanvasMouseMove}
-                  onMouseUp={handleCanvasMouseUp}
-                  onMouseLeave={handleCanvasMouseUp}
-                  onTouchStart={handleCanvasTouchStart}
-                  onTouchMove={handleCanvasTouchMove}
-                  onTouchEnd={handleCanvasTouchEnd}
-                />
-                <img ref={imageRef} className="hidden" alt="Original" />
-
-                {/* Magnifier for mobile */}
-                {magnifier.visible && isMobile && (
-                  <div
-                    className="absolute bg-white/95 rounded-2xl p-2 border-4 border-white shadow-2xl pointer-events-none z-60"
-                    style={{
-                      left: `${magnifier.x}%`,
-                      top: `${magnifier.y}%`,
-                      transform: "translate(-50%, -120%)",
-                    }}
-                  >
-                    <canvas
-                      ref={magnifierCanvasRef}
-                      className="rounded-xl"
-                      width={120}
-                      height={120}
-                    />
-                    <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-black/80 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
-                      🔍 Precision Crop Mode
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="text-center text-white/80 text-sm space-y-2">
-                {isMobile ? (
-                  <>
-                    <p>
-                      🔍 Touch and drag the white corners to adjust the crop
-                      area
-                    </p>
-                    <p>✨ A magnifier will appear for precise positioning</p>
-                  </>
-                ) : (
-                  <>
-                    <p>
-                      Drag the white corners to adjust the crop area
-                      independently
-                    </p>
-                    <p>Or drag inside the area to move the entire selection</p>
-                  </>
-                )}
-              </div>
-
-              <div className="flex gap-4 justify-center">
-                <Button
-                  onClick={resetCrop}
-                  variant="outline"
-                  className="bg-white/10 border-white/20 text-white hover:bg-white/20 rounded-xl"
-                >
-                  <RotateCcw className="h-4 w-4 mr-2" />
-                  Reset
-                </Button>
-                <Button
-                  onClick={applyCrop}
-                  className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-xl"
-                >
-                  <Check className="h-4 w-4 mr-2" />
-                  Apply Crop
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <CropCanvas
+          imageSrc={editingImage.preview}
+          onClose={() => setEditingImage(null)}
+          onApply={(blob) => {
+            const url = URL.createObjectURL(blob);
+            setImages((prev) =>
+              prev.map((img) =>
+                img.id === editingImage.id
+                  ? { ...img, editedPreview: url }
+                  : img
+              )
+            );
+            setEditingImage(null);
+          }}
+        />
       )}
     </div>
   );
