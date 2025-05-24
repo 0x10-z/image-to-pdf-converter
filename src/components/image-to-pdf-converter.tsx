@@ -406,7 +406,7 @@ export default function ImageToPDFConverter() {
             </div>
           </div>
           <p className="text-white/90 text-lg md:text-xl font-medium">
-            ✨ Transform your images into beautiful PDFs ✨
+            ✨ Transform your images into PDFs ✨
           </p>
         </div>
 
@@ -689,8 +689,7 @@ export default function ImageToPDFConverter() {
                 Ready for some magic?
               </h3>
               <p className="text-white/80 text-lg">
-                Upload your images and watch them transform into a beautiful
-                PDF!
+                Upload your images and watch them transform into a PDF!
               </p>
             </CardContent>
           </Card>
