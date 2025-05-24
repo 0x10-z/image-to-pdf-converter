@@ -34,21 +34,6 @@ interface CropArea {
   y2: number;
 }
 
-type CornerType =
-  | "topLeft"
-  | "topRight"
-  | "bottomLeft"
-  | "bottomRight"
-  | "move"
-  | null;
-
-interface MagnifierState {
-  visible: boolean;
-  x: number;
-  y: number;
-  corner: CornerType;
-}
-
 export default function ImageToPDFConverter() {
   const [images, setImages] = useState<ImageFile[]>([]);
   const [isConverting, setIsConverting] = useState(false);
@@ -69,16 +54,9 @@ export default function ImageToPDFConverter() {
     x2: 90,
     y2: 90,
   });
-  const [activeCorner, setActiveCorner] = useState<CornerType>(null);
-  const [magnifier, setMagnifier] = useState<MagnifierState>({
-    visible: false,
-    x: 0,
-    y: 0,
-    corner: null,
-  });
+
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
-  const magnifierCanvasRef = useRef<HTMLCanvasElement>(null);
 
   const handleFileSelect = useCallback((files: FileList) => {
     const newImages: ImageFile[] = [];
@@ -299,56 +277,6 @@ export default function ImageToPDFConverter() {
     setEditingImage(image);
     // Reset crop area
     setCropArea({ x1: 10, y1: 10, x2: 90, y2: 90 });
-    setActiveCorner(null);
-    setMagnifier({ visible: false, x: 0, y: 0, corner: null });
-  };
-
-  const updateCropArea = (corner: CornerType, x: number, y: number) => {
-    setCropArea((prev) => {
-      let newArea = { ...prev };
-
-      switch (corner) {
-        case "topLeft":
-          // Solo mueve la esquina superior izquierda, las otras 3 permanecen fijas
-          newArea.x1 = Math.max(0, Math.min(x, prev.x2 - 5));
-          newArea.y1 = Math.max(0, Math.min(y, prev.y2 - 5));
-          // x2, y2 permanecen igual (esquinas fijas)
-          break;
-        case "topRight":
-          // Solo mueve la esquina superior derecha, las otras 3 permanecen fijas
-          newArea.x2 = Math.min(100, Math.max(x, prev.x1 + 5));
-          newArea.y1 = Math.max(0, Math.min(y, prev.y2 - 5));
-          // x1, y2 permanecen igual (esquinas fijas)
-          break;
-        case "bottomLeft":
-          // Solo mueve la esquina inferior izquierda, las otras 3 permanecen fijas
-          newArea.x1 = Math.max(0, Math.min(x, prev.x2 - 5));
-          newArea.y2 = Math.min(100, Math.max(y, prev.y1 + 5));
-          // x2, y1 permanecen igual (esquinas fijas)
-          break;
-        case "bottomRight":
-          // Solo mueve la esquina inferior derecha, las otras 3 permanecen fijas
-          newArea.x2 = Math.min(100, Math.max(x, prev.x1 + 5));
-          newArea.y2 = Math.min(100, Math.max(y, prev.y1 + 5));
-          // x1, y1 permanecen igual (esquinas fijas)
-          break;
-        case "move":
-          const width = prev.x2 - prev.x1;
-          const height = prev.y2 - prev.y1;
-          const centerX = (prev.x1 + prev.x2) / 2;
-          const centerY = (prev.y1 + prev.y2) / 2;
-          const deltaX = x - centerX;
-          const deltaY = y - centerY;
-
-          newArea.x1 = Math.max(0, Math.min(100 - width, prev.x1 + deltaX));
-          newArea.y1 = Math.max(0, Math.min(100 - height, prev.y1 + deltaY));
-          newArea.x2 = newArea.x1 + width;
-          newArea.y2 = newArea.y1 + height;
-          break;
-      }
-
-      return newArea;
-    });
   };
 
   const drawCanvas = useCallback(() => {
@@ -443,216 +371,6 @@ export default function ImageToPDFConverter() {
     });
   }, [editingImage, cropArea, isMobile]);
 
-  const drawMagnifier = useCallback(
-    (x: number, y: number) => {
-      const canvas = canvasRef.current;
-      const magnifierCanvas = magnifierCanvasRef.current;
-      const img = imageRef.current;
-
-      if (!canvas || !magnifierCanvas || !img) return;
-
-      const ctx = canvas.getContext("2d");
-      const magnifierCtx = magnifierCanvas.getContext("2d");
-      if (!ctx || !magnifierCtx) return;
-
-      const magnifierSize = 120; // Aumentado para mejor visibilidad
-      const zoomLevel = 3;
-
-      magnifierCanvas.width = magnifierSize;
-      magnifierCanvas.height = magnifierSize;
-
-      // Calculate source area to magnify
-      const sourceSize = magnifierSize / zoomLevel;
-      const sourceX = (x / 100) * canvas.width - sourceSize / 2;
-      const sourceY = (y / 100) * canvas.height - sourceSize / 2;
-
-      // Clear magnifier
-      magnifierCtx.clearRect(0, 0, magnifierSize, magnifierSize);
-
-      // Draw magnified image
-      magnifierCtx.drawImage(
-        img,
-        (sourceX / canvas.width) * img.naturalWidth,
-        (sourceY / canvas.height) * img.naturalHeight,
-        (sourceSize / canvas.width) * img.naturalWidth,
-        (sourceSize / canvas.height) * img.naturalHeight,
-        0,
-        0,
-        magnifierSize,
-        magnifierSize
-      );
-
-      // Calculate crop area positions in magnifier coordinates
-      const cropX1 = ((cropArea.x1 / 100) * canvas.width - sourceX) * zoomLevel;
-      const cropY1 =
-        ((cropArea.y1 / 100) * canvas.height - sourceY) * zoomLevel;
-      const cropX2 = ((cropArea.x2 / 100) * canvas.width - sourceX) * zoomLevel;
-      const cropY2 =
-        ((cropArea.y2 / 100) * canvas.height - sourceY) * zoomLevel;
-
-      // Draw crop area overlay
-      magnifierCtx.fillStyle = "rgba(0, 0, 0, 0.7)"; // Cambiado de 0.4 a 0.7
-      magnifierCtx.fillRect(0, 0, magnifierSize, magnifierSize);
-
-      // Clear crop area in magnifier
-      if (
-        cropX1 < magnifierSize &&
-        cropY1 < magnifierSize &&
-        cropX2 > 0 &&
-        cropY2 > 0
-      ) {
-        const visibleX1 = Math.max(0, cropX1);
-        const visibleY1 = Math.max(0, cropY1);
-        const visibleX2 = Math.min(magnifierSize, cropX2);
-        const visibleY2 = Math.min(magnifierSize, cropY2);
-
-        if (visibleX2 > visibleX1 && visibleY2 > visibleY1) {
-          magnifierCtx.clearRect(
-            visibleX1,
-            visibleY1,
-            visibleX2 - visibleX1,
-            visibleY2 - visibleY1
-          );
-
-          // Redraw the image in the cleared area
-          magnifierCtx.drawImage(
-            img,
-            (sourceX / canvas.width) * img.naturalWidth,
-            (sourceY / canvas.height) * img.naturalHeight,
-            (sourceSize / canvas.width) * img.naturalWidth,
-            (sourceSize / canvas.height) * img.naturalHeight,
-            0,
-            0,
-            magnifierSize,
-            magnifierSize
-          );
-        }
-      }
-
-      // Draw crop border lines in magnifier
-      magnifierCtx.strokeStyle = "#ffffff";
-      magnifierCtx.lineWidth = 2;
-      magnifierCtx.setLineDash([]);
-
-      // Draw the crop rectangle if any part is visible
-      if (
-        cropX1 < magnifierSize &&
-        cropY1 < magnifierSize &&
-        cropX2 > 0 &&
-        cropY2 > 0
-      ) {
-        const visibleX1 = Math.max(0, cropX1);
-        const visibleY1 = Math.max(0, cropY1);
-        const visibleX2 = Math.min(magnifierSize, cropX2);
-        const visibleY2 = Math.min(magnifierSize, cropY2);
-
-        // Draw border lines
-        magnifierCtx.beginPath();
-        // Top line
-        if (cropY1 >= 0 && cropY1 <= magnifierSize) {
-          magnifierCtx.moveTo(Math.max(0, cropX1), cropY1);
-          magnifierCtx.lineTo(Math.min(magnifierSize, cropX2), cropY1);
-        }
-        // Bottom line
-        if (cropY2 >= 0 && cropY2 <= magnifierSize) {
-          magnifierCtx.moveTo(Math.max(0, cropX1), cropY2);
-          magnifierCtx.lineTo(Math.min(magnifierSize, cropX2), cropY2);
-        }
-        // Left line
-        if (cropX1 >= 0 && cropX1 <= magnifierSize) {
-          magnifierCtx.moveTo(cropX1, Math.max(0, cropY1));
-          magnifierCtx.lineTo(cropX1, Math.min(magnifierSize, cropY2));
-        }
-        // Right line
-        if (cropX2 >= 0 && cropX2 <= magnifierSize) {
-          magnifierCtx.moveTo(cropX2, Math.max(0, cropY1));
-          magnifierCtx.lineTo(cropX2, Math.min(magnifierSize, cropY2));
-        }
-        magnifierCtx.stroke();
-
-        // Draw corner points
-        magnifierCtx.fillStyle = "#ffffff";
-        const cornerSize = 4;
-
-        // Top-left corner
-        if (
-          cropX1 >= -cornerSize &&
-          cropX1 <= magnifierSize + cornerSize &&
-          cropY1 >= -cornerSize &&
-          cropY1 <= magnifierSize + cornerSize
-        ) {
-          magnifierCtx.fillRect(
-            cropX1 - cornerSize / 2,
-            cropY1 - cornerSize / 2,
-            cornerSize,
-            cornerSize
-          );
-        }
-        // Top-right corner
-        if (
-          cropX2 >= -cornerSize &&
-          cropX2 <= magnifierSize + cornerSize &&
-          cropY1 >= -cornerSize &&
-          cropY1 <= magnifierSize + cornerSize
-        ) {
-          magnifierCtx.fillRect(
-            cropX2 - cornerSize / 2,
-            cropY1 - cornerSize / 2,
-            cornerSize,
-            cornerSize
-          );
-        }
-        // Bottom-left corner
-        if (
-          cropX1 >= -cornerSize &&
-          cropX1 <= magnifierSize + cornerSize &&
-          cropY2 >= -cornerSize &&
-          cropY2 <= magnifierSize + cornerSize
-        ) {
-          magnifierCtx.fillRect(
-            cropX1 - cornerSize / 2,
-            cropY2 - cornerSize / 2,
-            cornerSize,
-            cornerSize
-          );
-        }
-        // Bottom-right corner
-        if (
-          cropX2 >= -cornerSize &&
-          cropX2 <= magnifierSize + cornerSize &&
-          cropY2 >= -cornerSize &&
-          cropY2 <= magnifierSize + cornerSize
-        ) {
-          magnifierCtx.fillRect(
-            cropX2 - cornerSize / 2,
-            cropY2 - cornerSize / 2,
-            cornerSize,
-            cornerSize
-          );
-        }
-      }
-
-      // Draw crosshair for current position
-      magnifierCtx.strokeStyle = "#ff0000";
-      magnifierCtx.lineWidth = 2;
-      magnifierCtx.setLineDash([]);
-      const center = magnifierSize / 2;
-      magnifierCtx.beginPath();
-      magnifierCtx.moveTo(center - 10, center);
-      magnifierCtx.lineTo(center + 10, center);
-      magnifierCtx.moveTo(center, center - 10);
-      magnifierCtx.lineTo(center, center + 10);
-      magnifierCtx.stroke();
-
-      // Draw border around magnifier
-      magnifierCtx.strokeStyle = "#ffffff";
-      magnifierCtx.lineWidth = 3;
-      magnifierCtx.setLineDash([]);
-      magnifierCtx.strokeRect(0, 0, magnifierSize, magnifierSize);
-    },
-    [cropArea]
-  );
-
   useEffect(() => {
     if (editingImage && imageRef.current) {
       imageRef.current.onload = drawCanvas;
@@ -663,12 +381,6 @@ export default function ImageToPDFConverter() {
   useEffect(() => {
     drawCanvas();
   }, [cropArea, drawCanvas]);
-
-  useEffect(() => {
-    if (magnifier.visible) {
-      drawMagnifier(magnifier.x, magnifier.y);
-    }
-  }, [magnifier, drawMagnifier]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-violet-400 via-pink-300 to-cyan-300 p-4 relative overflow-hidden">

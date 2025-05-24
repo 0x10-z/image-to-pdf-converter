@@ -184,7 +184,7 @@ export default function CropCanvas({
 
   const updateCropArea = (corner: CornerType, x: number, y: number) => {
     setCropArea((prev) => {
-      let newArea = { ...prev };
+      const newArea = { ...prev };
       switch (corner) {
         case "topLeft":
           newArea.x1 = Math.max(0, Math.min(x, prev.x2 - 5));
@@ -198,11 +198,12 @@ export default function CropCanvas({
           newArea.x1 = Math.max(0, Math.min(x, prev.x2 - 5));
           newArea.y2 = Math.min(100, Math.max(y, prev.y1 + 5));
           break;
-        case "bottomRight":
+        case "bottomRight": {
           newArea.x2 = Math.min(100, Math.max(x, prev.x1 + 5));
           newArea.y2 = Math.min(100, Math.max(y, prev.y1 + 5));
           break;
-        case "move":
+        }
+        case "move": {
           const width = prev.x2 - prev.x1;
           const height = prev.y2 - prev.y1;
           const centerX = (prev.x1 + prev.x2) / 2;
@@ -214,6 +215,7 @@ export default function CropCanvas({
           newArea.x2 = newArea.x1 + width;
           newArea.y2 = newArea.y1 + height;
           break;
+        }
       }
       return newArea;
     });
@@ -228,8 +230,8 @@ export default function CropCanvas({
 
     const maxSize = 400;
     const aspectRatio = img.naturalWidth / img.naturalHeight;
-    let canvasWidth = maxSize;
-    let canvasHeight = maxSize / aspectRatio;
+    const canvasWidth = maxSize;
+    const canvasHeight = maxSize / aspectRatio;
 
     canvas.width = canvasWidth;
     canvas.height = canvasHeight;
@@ -423,24 +425,49 @@ export default function CropCanvas({
           {/* {magnifier.visible && isMobile && ( */}
           {magnifier.visible &&
             ReactDOM.createPortal(
-              <div
-                className="fixed bg-white/95 rounded-2xl p-2 border-4 border-white shadow-2xl pointer-events-none z-[9999]"
-                style={{
-                  left: `${magnifier.x}%`,
-                  top: `${magnifier.y}%`,
-                  transform: "translate(-50%, -120%)",
-                }}
-              >
-                <canvas
-                  ref={magnifierCanvasRef}
-                  className="rounded-xl"
-                  width={120}
-                  height={120}
-                />
-                <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-black/80 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
-                  🔍 Precision Crop Mode
-                </div>
-              </div>,
+              (() => {
+                const screenWidth = window.innerWidth;
+                const magnifierSize = 120;
+                const margin = 16;
+                const canvas = canvasRef.current;
+
+                const canvasRect = canvas?.getBoundingClientRect();
+                const canvasLeft = canvasRect?.left || 0;
+                const canvasTop = canvasRect?.top || 0;
+                const canvasWidth = canvas?.offsetWidth || 0;
+                const canvasHeight = canvas?.offsetHeight || 0;
+
+                const posX = (magnifier.x / 100) * canvasWidth + canvasLeft;
+                const posY = (magnifier.y / 100) * canvasHeight + canvasTop;
+
+                const isNearRight = posX + magnifierSize + margin > screenWidth;
+                const isNearLeft = posX - magnifierSize - margin < 0;
+
+                let adjustedX = posX;
+                if (isNearRight) adjustedX = posX - magnifierSize - margin;
+                else if (isNearLeft) adjustedX = posX + magnifierSize + margin;
+
+                return (
+                  <div
+                    className="fixed bg-white/95 rounded-2xl p-2 border-4 border-white shadow-2xl pointer-events-none z-[9999]"
+                    style={{
+                      left: `${adjustedX}px`,
+                      top: `${posY}px`,
+                      transform: "translate(-50%, -120%)",
+                    }}
+                  >
+                    <canvas
+                      ref={magnifierCanvasRef}
+                      className="rounded-xl"
+                      width={magnifierSize}
+                      height={magnifierSize}
+                    />
+                    <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-black/80 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+                      🔍 Precision Crop Mode
+                    </div>
+                  </div>
+                );
+              })(),
               document.getElementById("magnifier-root")!
             )}
 
