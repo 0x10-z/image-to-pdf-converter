@@ -633,62 +633,56 @@ export default function ImageToPDFConverter() {
                   {images.map((image, index) => (
                     <div
                       key={image.id}
-                      className={`flex items-center ${
+                      className={`flex flex-col gap-2 p-3 rounded-2xl border shadow-md transition-all duration-300 ${
                         isDarkMode
-                          ? "bg-gradient-to-r from-slate-700/30 to-slate-600/30"
-                          : "bg-gradient-to-r from-slate-100/50 to-slate-200/50"
-                      } backdrop-blur-lg rounded-2xl p-2 gap-5 ${
-                        isDarkMode
-                          ? "border-slate-600/50"
-                          : "border-slate-300/50"
-                      } border shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]`}
+                          ? "bg-slate-800/40 border-slate-600/40 text-slate-100"
+                          : "bg-white/70 border-slate-300/50 text-slate-900"
+                      }`}
                     >
-                      <div className="flex flex-col max-w-sm">
-                        <p
-                          className={`${themeClasses.text.primary} text-sm truncate font-medium`}
-                        >
-                          {image.file.name.length > 30
-                            ? `${image.file.name.slice(0, 30)}...`
-                            : image.file.name}
-                        </p>
-                        <div className="flex ">
-                          <div className="flex flex-row flex-shrink-0 w-20 h-20 relative">
-                            <div
-                              className={`absolute -top-2 -left-2 ${
-                                isDarkMode
-                                  ? "bg-gradient-to-r from-slate-600 to-slate-500 text-slate-200"
-                                  : "bg-gradient-to-r from-slate-500 to-slate-600 text-white"
-                              } text-sm px-3 py-1 rounded-full font-semibold z-20 shadow-lg border ${
-                                isDarkMode
-                                  ? "border-slate-500/50"
-                                  : "border-slate-400/50"
-                              } animate-pulse`}
-                            >
-                              {index + 1}
-                            </div>
-                            <img
-                              src={
-                                image.editedPreview ||
-                                image.preview ||
-                                "/placeholder.svg"
-                              }
-                              alt="Preview"
-                              className={`w-full h-full object-cover rounded-xl shadow-lg cursor-pointer border ${
-                                isDarkMode
-                                  ? "border-slate-600/50"
-                                  : "border-slate-300/50"
-                              } transform hover:scale-110 transition-all duration-300`}
-                              onClick={() => openImageEditor(image)}
-                            />
-                            {image.editedPreview && (
-                              <div className="absolute -top-1 -right-1 bg-emerald-500 text-white rounded-full p-1 z-20 shadow-lg animate-bounce">
-                                <Edit3 className="h-3 w-3" />
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex-grow truncate"></div>
+                      {/* Nombre arriba */}
+                      <p className="text-sm font-medium truncate px-1">
+                        {image.file.name.length > 40
+                          ? image.file.name.slice(0, 40) + "..."
+                          : image.file.name}
+                      </p>
 
-                          <div className="flex-shrink-0 flex flex-col gap-2">
+                      {/* Contenido horizontal */}
+                      <div className="flex items-center gap-4">
+                        {/* Imagen */}
+                        <div className="relative w-20 h-20 flex-shrink-0">
+                          <div
+                            className={`absolute -top-2 -left-2 px-3 py-1 rounded-full text-sm font-semibold z-10 shadow-md border animate-pulse ${
+                              isDarkMode
+                                ? "bg-slate-600 text-slate-200 border-slate-500"
+                                : "bg-slate-500 text-white border-slate-300"
+                            }`}
+                          >
+                            {index + 1}
+                          </div>
+                          <img
+                            src={
+                              image.editedPreview ||
+                              image.preview ||
+                              "/placeholder.svg"
+                            }
+                            alt="Preview"
+                            className={`w-full h-full object-cover rounded-xl border cursor-pointer transform hover:scale-105 transition-transform ${
+                              isDarkMode
+                                ? "border-slate-500"
+                                : "border-slate-300"
+                            }`}
+                            onClick={() => openImageEditor(image)}
+                          />
+                          {image.editedPreview && (
+                            <div className="absolute -top-1 -right-1 bg-emerald-500 text-white rounded-full p-1 z-10 shadow-md animate-bounce">
+                              <Edit3 className="h-3 w-3" />
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Botones */}
+                        <div className="flex gap-2 items-center ml-auto">
+                          <div className="flex flex-col gap-2">
                             <Button
                               variant="outline"
                               size="icon"
@@ -696,13 +690,12 @@ export default function ImageToPDFConverter() {
                                 isDarkMode
                                   ? "bg-slate-700/50 border-slate-600/50 text-slate-300 hover:bg-slate-600/50"
                                   : "bg-slate-200/50 border-slate-300/50 text-slate-600 hover:bg-slate-300/50"
-                              } rounded-xl transform hover:scale-110 transition-all duration-200`}
+                              } rounded-xl transition-all`}
                               onClick={() => moveImageUp(index)}
                               disabled={index === 0}
                             >
                               <ChevronUp className="h-4 w-4" />
                             </Button>
-
                             <Button
                               variant="outline"
                               size="icon"
@@ -710,7 +703,7 @@ export default function ImageToPDFConverter() {
                                 isDarkMode
                                   ? "bg-slate-700/50 border-slate-600/50 text-slate-300 hover:bg-slate-600/50"
                                   : "bg-slate-200/50 border-slate-300/50 text-slate-600 hover:bg-slate-300/50"
-                              } rounded-xl transform hover:scale-110 transition-all duration-200`}
+                              } rounded-xl transition-all`}
                               onClick={() => moveImageDown(index)}
                               disabled={index === images.length - 1}
                             >
@@ -720,7 +713,7 @@ export default function ImageToPDFConverter() {
                           <Button
                             variant="outline"
                             size="icon"
-                            className="h-10 w-10 bg-red-900/30 border-red-700/50 text-red-400 hover:bg-red-800/40 hover:text-red-300 rounded-xl transform hover:scale-110 transition-all duration-200"
+                            className="h-10 w-10 bg-red-900/30 border-red-700/50 text-red-400 hover:bg-red-800/40 hover:text-red-300 rounded-xl transition-all"
                             onClick={() => removeImage(image.id)}
                           >
                             <X className="h-4 w-4" />
