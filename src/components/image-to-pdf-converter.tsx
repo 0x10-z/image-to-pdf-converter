@@ -197,7 +197,7 @@ export default function ImageToPDFConverter() {
         .toISOString()
         .slice(0, 19)
         .replace(/:/g, "-");
-      const filename = `images-to-pdf-${timestamp}.pdf`;
+      const filename = `file-${timestamp}.pdf`;
 
       // Save PDF with better browser compatibility
       pdf.save(filename);

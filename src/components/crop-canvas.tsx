@@ -110,7 +110,6 @@ export default function CropCanvas({
       magnifierCtx.stroke();
     }
 
-    // Dibuja el rectángulo del cropArea en la lupa
     const cropCanvasX1 = ((cropArea.x1 / 100) * canvas.width - sourceX) * zoom;
     const cropCanvasY1 = ((cropArea.y1 / 100) * canvas.height - sourceY) * zoom;
     const cropCanvasX2 = ((cropArea.x2 / 100) * canvas.width - sourceX) * zoom;
@@ -118,7 +117,7 @@ export default function CropCanvas({
     const cropW = cropCanvasX2 - cropCanvasX1;
     const cropH = cropCanvasY2 - cropCanvasY1;
 
-    // Dibuja las esquinas
+    // Esquinas blancas
     const size = 6;
     magnifierCtx.fillStyle = "white";
     magnifierCtx.fillRect(
@@ -126,35 +125,39 @@ export default function CropCanvas({
       cropCanvasY1 - size / 2,
       size,
       size
-    ); // Top-left
+    );
     magnifierCtx.fillRect(
       cropCanvasX2 - size / 2,
       cropCanvasY1 - size / 2,
       size,
       size
-    ); // Top-right
+    );
     magnifierCtx.fillRect(
       cropCanvasX1 - size / 2,
       cropCanvasY2 - size / 2,
       size,
       size
-    ); // Bottom-left
+    );
     magnifierCtx.fillRect(
       cropCanvasX2 - size / 2,
       cropCanvasY2 - size / 2,
       size,
       size
-    ); // Bottom-right
+    );
 
-    // Solo dibuja si el área está dentro de los límites visibles
+    // Rectángulo del cropArea con borde negro y línea blanca encima
     if (
       cropCanvasX2 > 0 &&
       cropCanvasY2 > 0 &&
       cropCanvasX1 < magnifierSize &&
       cropCanvasY1 < magnifierSize
     ) {
+      magnifierCtx.strokeStyle = "black";
+      magnifierCtx.lineWidth = 3;
+      magnifierCtx.strokeRect(cropCanvasX1, cropCanvasY1, cropW, cropH);
+
       magnifierCtx.strokeStyle = "white";
-      magnifierCtx.lineWidth = 2;
+      magnifierCtx.lineWidth = 1.5;
       magnifierCtx.strokeRect(cropCanvasX1, cropCanvasY1, cropW, cropH);
     }
   }, [magnifier]);
@@ -248,20 +251,48 @@ export default function CropCanvas({
     const cropW = ((cropArea.x2 - cropArea.x1) / 100) * canvasWidth;
     const cropH = ((cropArea.y2 - cropArea.y1) / 100) * canvasHeight;
 
+    // Stroke outer (black)
+    ctx.strokeStyle = "black";
+    ctx.lineWidth = 3;
+    ctx.strokeRect(cropX, cropY, cropW, cropH);
+
+    // Stroke inner (white)
     ctx.strokeStyle = "white";
     ctx.lineWidth = 2;
     ctx.strokeRect(cropX, cropY, cropW, cropH);
 
-    // Draw grid lines
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
-    ctx.lineWidth = 1;
+    // Grid lines (double stroke for each)
     for (let i = 1; i < 3; i++) {
       const gridX = cropX + (cropW / 3) * i;
       const gridY = cropY + (cropH / 3) * i;
+
+      // Vertical black
+      ctx.strokeStyle = "black";
+      ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(gridX, cropY);
       ctx.lineTo(gridX, cropY + cropH);
       ctx.stroke();
+
+      // Vertical white
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(gridX, cropY);
+      ctx.lineTo(gridX, cropY + cropH);
+      ctx.stroke();
+
+      // Horizontal black
+      ctx.strokeStyle = "black";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(cropX, gridY);
+      ctx.lineTo(cropX + cropW, gridY);
+      ctx.stroke();
+
+      // Horizontal white
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
+      ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(cropX, gridY);
       ctx.lineTo(cropX + cropW, gridY);
@@ -269,6 +300,34 @@ export default function CropCanvas({
     }
 
     const size = 10;
+    // Corner squares - black border
+    ctx.fillStyle = "black";
+    ctx.fillRect(
+      cropX - size / 2 - 1,
+      cropY - size / 2 - 1,
+      size + 2,
+      size + 2
+    );
+    ctx.fillRect(
+      cropX + cropW - size / 2 - 1,
+      cropY - size / 2 - 1,
+      size + 2,
+      size + 2
+    );
+    ctx.fillRect(
+      cropX - size / 2 - 1,
+      cropY + cropH - size / 2 - 1,
+      size + 2,
+      size + 2
+    );
+    ctx.fillRect(
+      cropX + cropW - size / 2 - 1,
+      cropY + cropH - size / 2 - 1,
+      size + 2,
+      size + 2
+    );
+
+    // Corner squares - white center
     ctx.fillStyle = "white";
     ctx.fillRect(cropX - size / 2, cropY - size / 2, size, size);
     ctx.fillRect(cropX + cropW - size / 2, cropY - size / 2, size, size);
@@ -380,7 +439,7 @@ export default function CropCanvas({
           isDarkMode
             ? "bg-gradient-to-br from-slate-800/90 to-slate-700/90 border-slate-600/50"
             : "bg-gradient-to-br from-white/90 to-slate-50/90 border-slate-300/50"
-        } backdrop-blur-xl rounded-3xl p-8 max-w-4xl w-full max-h-[95vh] overflow-auto border shadow-2xl`}
+        } backdrop-blur-xl rounded-3xl py-8 px-4 max-w-4xl w-full max-h-[95vh] overflow-auto border shadow-2xl`}
       >
         <div className="flex items-center justify-between mb-8">
           <h3
