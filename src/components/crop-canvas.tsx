@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "./ui/button";
 import { Edit3, RotateCcw, X, ZoomIn, Check } from "lucide-react";
 import { useMobile } from "@/hooks/use-mobile";
-import ReactDOM from "react-dom";
 import { getThemeClasses } from "@/themes";
 
 interface CropArea {

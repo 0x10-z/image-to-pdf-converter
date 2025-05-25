@@ -10,7 +10,6 @@ import {
   GripVertical,
   ChevronUp,
   ChevronDown,
-  Sparkles,
   Zap,
   Edit3,
   Sun,
