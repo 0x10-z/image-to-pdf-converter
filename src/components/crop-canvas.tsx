@@ -3,6 +3,7 @@ import { Button } from "./ui/button";
 import { Edit3, RotateCcw, X, ZoomIn, Check } from "lucide-react";
 import { useMobile } from "@/hooks/use-mobile";
 import ReactDOM from "react-dom";
+import { getThemeClasses } from "@/themes";
 
 interface CropArea {
   x1: number;
@@ -30,12 +31,14 @@ interface CropCanvasProps {
   imageSrc: string;
   onClose: () => void;
   onApply: (blob: Blob) => void;
+  isDarkMode: boolean;
 }
 
 export default function CropCanvas({
   imageSrc,
   onClose,
   onApply,
+  isDarkMode,
 }: CropCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
@@ -56,6 +59,8 @@ export default function CropCanvas({
     y: 0,
     corner: null,
   });
+
+  const themeClasses = getThemeClasses(isDarkMode);
 
   const drawMagnifier = useCallback(() => {
     const canvas = canvasRef.current;
@@ -370,29 +375,49 @@ export default function CropCanvas({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 max-w-3xl w-full max-h-[95vh] overflow-auto border border-white/20 shadow-2xl">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-2xl font-bold text-white flex items-center gap-3">
-            <Edit3 className="h-6 w-6" />
-            Crop Image
-            {isMobile && <ZoomIn className="h-5 w-5 text-cyan-300" />}
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div
+        className={`${
+          isDarkMode
+            ? "bg-gradient-to-br from-slate-800/90 to-slate-700/90 border-slate-600/50"
+            : "bg-gradient-to-br from-white/90 to-slate-50/90 border-slate-300/50"
+        } backdrop-blur-xl rounded-3xl p-8 max-w-4xl w-full max-h-[95vh] overflow-auto border shadow-2xl`}
+      >
+        <div className="flex items-center justify-between mb-8">
+          <h3
+            className={`text-3xl font-bold ${themeClasses.text.primary} flex items-center gap-4`}
+          >
+            <Edit3 className="h-7 w-7" />
+            Image Editor
+            {isMobile && (
+              <ZoomIn className="h-5 w-5 text-blue-400 animate-pulse" />
+            )}
           </h3>
           <Button
             onClick={onClose}
             variant="outline"
             size="icon"
-            className="bg-white/10 border-white/20 text-white hover:bg-white/20 rounded-xl"
+            className={`${
+              isDarkMode
+                ? "bg-slate-700/50 border-slate-600/50 text-slate-300 hover:bg-slate-600/50"
+                : "bg-slate-200/50 border-slate-300/50 text-slate-600 hover:bg-slate-300/50"
+            } rounded-xl`}
           >
-            <X className="h-4 w-4" />
+            <X className="h-5 w-5" />
           </Button>
         </div>
 
-        <div className="space-y-6">
-          <div className="bg-white/5 rounded-2xl p-4 relative">
+        <div className="space-y-8">
+          <div
+            className={`${
+              isDarkMode
+                ? "bg-slate-900/30 border-slate-700/50"
+                : "bg-slate-100/30 border-slate-300/50"
+            } rounded-3xl p-6 relative border`}
+          >
             <canvas
               ref={canvasRef}
-              className="max-w-full h-auto mx-auto rounded-lg cursor-crosshair touch-none"
+              className="max-w-full h-auto mx-auto rounded-2xl cursor-crosshair touch-none shadow-lg"
               onMouseDown={handleCanvasMouseDown}
               onMouseMove={handleCanvasMouseMove}
               onMouseUp={handleCanvasMouseUp}
@@ -402,15 +427,47 @@ export default function CropCanvas({
               onTouchEnd={handleCanvasTouchEnd}
             />
             <img ref={imageRef} className="hidden" alt="Original" />
+
+            {/* Magnifier for mobile */}
+            {magnifier.visible && isMobile && (
+              <div
+                className={`absolute ${
+                  isDarkMode
+                    ? "bg-slate-800/95 border-slate-600"
+                    : "bg-white/95 border-slate-400"
+                } rounded-2xl p-3 border-2 shadow-2xl pointer-events-none z-60`}
+                style={{
+                  left: `${magnifier.x}%`,
+                  top: `${magnifier.y}%`,
+                  transform: "translate(-50%, -120%)",
+                }}
+              >
+                <canvas
+                  ref={magnifierCanvasRef}
+                  className="rounded-xl"
+                  width={120}
+                  height={120}
+                />
+                <div
+                  className={`absolute -bottom-8 left-1/2 transform -translate-x-1/2 ${
+                    isDarkMode
+                      ? "bg-slate-900/90 text-slate-300 border-slate-700/50"
+                      : "bg-slate-800/90 text-slate-200 border-slate-600/50"
+                  } text-xs px-3 py-1 rounded-lg whitespace-nowrap border`}
+                >
+                  Precision Mode
+                </div>
+              </div>
+            )}
           </div>
 
-          <div className="text-center text-white/80 text-sm space-y-2">
+          <div
+            className={`text-center ${themeClasses.text.secondary} text-base space-y-3`}
+          >
             {isMobile ? (
               <>
-                <p>
-                  🔍 Touch and drag the white corners to adjust the crop area
-                </p>
-                <p>✨ A magnifier will appear for precise positioning</p>
+                <p>Touch and drag the white corners to adjust the crop area</p>
+                <p>Precision magnifier will appear for accurate positioning</p>
               </>
             ) : (
               <>
@@ -422,70 +479,25 @@ export default function CropCanvas({
             )}
           </div>
 
-          {/* {magnifier.visible && isMobile && ( */}
-          {magnifier.visible &&
-            ReactDOM.createPortal(
-              (() => {
-                const screenWidth = window.innerWidth;
-                const magnifierSize = 120;
-                const margin = 16;
-                const canvas = canvasRef.current;
-
-                const canvasRect = canvas?.getBoundingClientRect();
-                const canvasLeft = canvasRect?.left || 0;
-                const canvasTop = canvasRect?.top || 0;
-                const canvasWidth = canvas?.offsetWidth || 0;
-                const canvasHeight = canvas?.offsetHeight || 0;
-
-                const posX = (magnifier.x / 100) * canvasWidth + canvasLeft;
-                const posY = (magnifier.y / 100) * canvasHeight + canvasTop;
-
-                const isNearRight = posX + magnifierSize + margin > screenWidth;
-                const isNearLeft = posX - magnifierSize - margin < 0;
-
-                let adjustedX = posX;
-                if (isNearRight) adjustedX = posX - magnifierSize - margin;
-                else if (isNearLeft) adjustedX = posX + magnifierSize + margin;
-
-                return (
-                  <div
-                    className="fixed bg-white/95 rounded-2xl p-2 border-4 border-white shadow-2xl pointer-events-none z-[9999]"
-                    style={{
-                      left: `${adjustedX}px`,
-                      top: `${posY}px`,
-                      transform: "translate(-50%, -120%)",
-                    }}
-                  >
-                    <canvas
-                      ref={magnifierCanvasRef}
-                      className="rounded-xl"
-                      width={magnifierSize}
-                      height={magnifierSize}
-                    />
-                    <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-black/80 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
-                      🔍 Precision Crop Mode
-                    </div>
-                  </div>
-                );
-              })(),
-              document.getElementById("magnifier-root")!
-            )}
-
           <div className="flex gap-4 justify-center">
             <Button
               onClick={resetCrop}
               variant="outline"
-              className="bg-white/10 border-white/20 text-white hover:bg-white/20 rounded-xl"
+              className={`${
+                isDarkMode
+                  ? "bg-slate-700/50 border-slate-600/50 text-slate-300 hover:bg-slate-600/50"
+                  : "bg-slate-200/50 border-slate-300/50 text-slate-600 hover:bg-slate-300/50"
+              } rounded-xl px-6 py-3`}
             >
               <RotateCcw className="h-4 w-4 mr-2" />
               Reset
             </Button>
             <Button
               onClick={applyCrop}
-              className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-xl"
+              className={`${themeClasses.button.success} text-white rounded-xl px-6 py-3 shadow-lg`}
             >
               <Check className="h-4 w-4 mr-2" />
-              Apply Crop
+              Apply Changes
             </Button>
           </div>
         </div>

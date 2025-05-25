@@ -13,12 +13,16 @@ import {
   Sparkles,
   Zap,
   Edit3,
+  Sun,
+  Moon,
+  FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
 import { useMobile } from "@/hooks/use-mobile";
 import CropCanvas from "./crop-canvas";
+import { getThemeClasses } from "@/themes";
 
 interface ImageFile {
   file: File;
@@ -40,6 +44,8 @@ export default function ImageToPDFConverter() {
   const [progress, setProgress] = useState(0);
   const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [isDarkMode, setIsDarkMode] = useState(true);
 
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
@@ -108,6 +114,8 @@ export default function ImageToPDFConverter() {
       return updated;
     });
   }, []);
+
+  const themeClasses = getThemeClasses(isDarkMode);
 
   const convertToPDF = async () => {
     if (images.length === 0) return;
@@ -383,62 +391,133 @@ export default function ImageToPDFConverter() {
   }, [cropArea, drawCanvas]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-violet-400 via-pink-300 to-cyan-300 p-4 relative overflow-hidden">
-      {/* Animated background elements */}
+    <div
+      className={`min-h-screen ${themeClasses.background} p-4 relative overflow-hidden transition-all duration-500`}
+    >
+      {/* Animated background elements - RESTAURADAS */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-yellow-400 to-pink-400 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-br from-purple-400 to-blue-400 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-pulse animation-delay-2000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-gradient-to-br from-green-400 to-cyan-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse animation-delay-4000"></div>
+        <div
+          className={`absolute -top-40 -right-40 w-80 h-80 ${
+            isDarkMode
+              ? "bg-gradient-to-br from-blue-600/10 to-indigo-600/10"
+              : "bg-gradient-to-br from-blue-400/20 to-indigo-400/20"
+          } rounded-full mix-blend-multiply filter blur-3xl animate-pulse`}
+        ></div>
+        <div
+          className={`absolute -bottom-40 -left-40 w-80 h-80 ${
+            isDarkMode
+              ? "bg-gradient-to-br from-purple-600/10 to-violet-600/10"
+              : "bg-gradient-to-br from-purple-400/20 to-violet-400/20"
+          } rounded-full mix-blend-multiply filter blur-3xl animate-pulse animation-delay-2000`}
+        ></div>
+        <div
+          className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 ${
+            isDarkMode
+              ? "bg-gradient-to-br from-emerald-600/5 to-teal-600/5"
+              : "bg-gradient-to-br from-emerald-400/15 to-teal-400/15"
+          } rounded-full mix-blend-multiply filter blur-3xl animate-pulse animation-delay-4000`}
+        ></div>
+      </div>
+
+      {/* Theme Toggle Button */}
+      <div className="fixed top-6 right-6 z-50">
+        <Button
+          onClick={() => setIsDarkMode(!isDarkMode)}
+          className={`p-3 rounded-2xl shadow-lg transform hover:scale-110 transition-all duration-300 ${themeClasses.button.primary}`}
+        >
+          {isDarkMode ? (
+            <Sun
+              className="h-5 w-5 animate-spin"
+              style={{ animationDuration: "8s" }}
+            />
+          ) : (
+            <Moon className="h-5 w-5 animate-pulse" />
+          )}
+        </Button>
       </div>
 
       <div className="max-w-6xl mx-auto relative z-10">
         {/* Header */}
-        <div className="text-center mb-12">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="p-3 bg-white/20 backdrop-blur-lg rounded-2xl">
-              <Sparkles className="h-8 w-8 text-white" />
+        <div className="text-center mb-16">
+          <div className="flex items-center justify-center gap-4 mb-6">
+            <div
+              className={`p-4 ${themeClasses.card} backdrop-blur-xl rounded-2xl shadow-2xl transform hover:scale-110 transition-all duration-300`}
+            >
+              <FileText
+                className={`h-8 w-8 ${
+                  isDarkMode ? "text-slate-300" : "text-slate-600"
+                } animate-pulse`}
+              />
             </div>
-            <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-white via-purple-100 to-pink-100 bg-clip-text text-transparent">
+            <h1
+              className={`text-5xl md:text-7xl font-bold ${
+                isDarkMode
+                  ? "bg-gradient-to-r from-slate-200 via-slate-300 to-slate-400"
+                  : "bg-gradient-to-r from-slate-700 via-slate-800 to-slate-900"
+              } bg-clip-text text-transparent tracking-tight animate-pulse`}
+            >
               Image to PDF
             </h1>
-            <div className="p-3 bg-white/20 backdrop-blur-lg rounded-2xl">
-              <Zap className="h-8 w-8 text-white" />
+            <div
+              className={`p-4 ${themeClasses.card} backdrop-blur-xl rounded-2xl shadow-2xl transform hover:scale-110 transition-all duration-300`}
+            >
+              <Zap
+                className={`h-8 w-8 ${
+                  isDarkMode ? "text-slate-300" : "text-slate-600"
+                } animate-bounce`}
+              />
             </div>
           </div>
-          <p className="text-white/90 text-lg md:text-xl font-medium">
-            ✨ Transform your images into PDFs ✨
+          <p
+            className={`${themeClasses.text.secondary} text-xl md:text-2xl font-medium max-w-2xl mx-auto leading-relaxed`}
+          >
+            Professional document conversion with advanced editing capabilities
           </p>
         </div>
 
         {/* Upload Area */}
-        <Card className="mb-8 bg-white/10 backdrop-blur-lg border-white/20 shadow-2xl">
-          <CardContent className="p-8">
+        <Card
+          className={`mb-8 ${themeClasses.card} backdrop-blur-xl shadow-2xl transform hover:scale-[1.01] transition-all duration-300`}
+        >
+          <CardContent className="p-10">
             <div
-              className={`border-2 border-dashed rounded-2xl p-12 text-center transition-all duration-300 transform ${
+              className={`border-2 border-dashed rounded-3xl p-16 text-center transition-all duration-500 transform ${
                 isDragOver
-                  ? "border-white bg-white/20 scale-105 shadow-2xl"
-                  : "border-white/40 hover:border-white/60 hover:bg-white/5"
+                  ? `${themeClasses.uploadActive} scale-[1.02] shadow-2xl`
+                  : `${themeClasses.upload}`
               }`}
               onDrop={handleDrop}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
             >
-              <div className="relative">
-                <Upload className="mx-auto h-16 w-16 text-white mb-6 animate-bounce" />
-                <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full animate-ping"></div>
+              <div className="relative mb-8">
+                <Upload
+                  className={`mx-auto h-20 w-20 ${themeClasses.text.secondary} transition-transform duration-300 hover:scale-110 animate-bounce`}
+                />
+                <div
+                  className={`absolute -top-2 -right-2 w-4 h-4 ${
+                    isDarkMode
+                      ? "bg-gradient-to-r from-blue-500 to-indigo-500"
+                      : "bg-gradient-to-r from-blue-600 to-indigo-600"
+                  } rounded-full animate-ping`}
+                ></div>
               </div>
-              <h3 className="text-2xl font-bold text-white mb-3">
-                Drop your magic here!
+              <h3
+                className={`text-3xl font-bold ${themeClasses.text.primary} mb-4`}
+              >
+                Upload Your Images
               </h3>
-              <p className="text-white/80 text-lg mb-6">
-                Or click to select your amazing images
+              <p
+                className={`${themeClasses.text.secondary} text-lg mb-8 max-w-md mx-auto`}
+              >
+                Drag and drop your files here or click to browse
               </p>
               <Button
                 onClick={() => fileInputRef.current?.click()}
-                className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-4 px-8 rounded-2xl shadow-lg transform hover:scale-105 transition-all duration-200"
+                className={`${themeClasses.button.primary} font-semibold py-4 px-8 rounded-2xl shadow-lg transform hover:scale-105 transition-all duration-300`}
               >
-                <Upload className="mr-2 h-5 w-5" />
-                Choose Images
+                <Upload className="mr-3 h-5 w-5" />
+                Select Images
               </Button>
               <input
                 ref={fileInputRef}
@@ -456,86 +535,126 @@ export default function ImageToPDFConverter() {
 
         {/* Loading Bar */}
         {isConverting && (
-          <Card className="mb-8 bg-white/10 backdrop-blur-lg border-white/20 shadow-2xl">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full">
+          <Card
+            className={`mb-8 ${themeClasses.card} backdrop-blur-xl shadow-2xl animate-pulse`}
+          >
+            <CardContent className="p-8">
+              <div className="flex items-center gap-6 mb-6">
+                <div className="p-3 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl shadow-lg">
                   <Loader2 className="h-6 w-6 text-white animate-spin" />
                 </div>
-                <span className="text-lg font-bold text-white">
-                  Creating your PDF magic... {Math.round(progress)}%
+                <span
+                  className={`text-xl font-semibold ${themeClasses.text.primary}`}
+                >
+                  Processing documents... {Math.round(progress)}%
                 </span>
               </div>
-              <Progress value={progress} className="h-3 bg-white/20" />
+              <Progress
+                value={progress}
+                className={`h-3 ${
+                  isDarkMode ? "bg-slate-700/50" : "bg-slate-300/50"
+                } rounded-full overflow-hidden`}
+              >
+                <div
+                  className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all duration-300 ease-out rounded-full"
+                  style={{ width: `${progress}%` }}
+                />
+              </Progress>
             </CardContent>
           </Card>
         )}
 
         {/* Image Preview Grid */}
         {images.length > 0 && (
-          <Card className="mb-8 bg-white/10 backdrop-blur-lg border-white/20 shadow-2xl">
-            <CardContent className="p-8">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-2xl font-bold text-white flex items-center gap-3">
-                  <div className="p-2 bg-gradient-to-r from-green-400 to-blue-400 rounded-xl">
+          <Card
+            className={`mb-8 ${themeClasses.card} backdrop-blur-xl shadow-2xl`}
+          >
+            <CardContent className="p-10">
+              <div className="flex items-center justify-between mb-8">
+                <h3
+                  className={`text-3xl font-bold ${themeClasses.text.primary} flex items-center gap-4`}
+                >
+                  <div className="p-3 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-2xl shadow-lg animate-pulse">
                     <FileImage className="h-6 w-6 text-white" />
                   </div>
-                  Your Gallery ({images.length})
+                  Document Gallery ({images.length})
                 </h3>
                 <Button
                   onClick={convertToPDF}
                   disabled={isConverting || images.length === 0}
-                  className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold py-4 px-8 rounded-2xl shadow-lg transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:transform-none"
+                  className={`${themeClasses.button.success} text-white font-semibold py-4 px-8 rounded-2xl shadow-lg transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:transform-none`}
                 >
                   {isConverting ? (
                     <>
-                      <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                      <Loader2 className="h-5 w-5 mr-3 animate-spin" />
                       Converting...
                     </>
                   ) : (
                     <>
-                      <Download className="h-5 w-5 mr-2" />
-                      Create PDF ✨
+                      <Download className="h-5 w-5 mr-3" />
+                      Generate PDF
                     </>
                   )}
                 </Button>
               </div>
 
-              <div className="space-y-3 mb-6">
-                <p className="text-white/90 text-lg flex items-center gap-3">
+              <div className="space-y-4 mb-8">
+                <p
+                  className={`${themeClasses.text.primary} text-lg flex items-center gap-3`}
+                >
                   {isMobile ? (
                     <>
                       <div className="flex gap-1">
-                        <ChevronUp className="h-5 w-5 text-yellow-300" />
-                        <ChevronDown className="h-5 w-5 text-yellow-300" />
+                        <ChevronUp className="h-5 w-5 text-blue-400 animate-bounce" />
+                        <ChevronDown className="h-5 w-5 text-blue-400 animate-bounce animation-delay-1000" />
                       </div>
-                      Use the buttons to reorder your masterpiece
+                      Use controls to reorder documents
                     </>
                   ) : (
                     <>
-                      <GripVertical className="h-5 w-5 text-yellow-300" />
-                      Drag and drop to arrange your story
+                      <GripVertical className="h-5 w-5 text-blue-400 animate-pulse" />
+                      Drag and drop to arrange document order
                     </>
                   )}
                 </p>
-                <p className="text-white/80 text-base flex items-center gap-2">
-                  <Edit3 className="h-4 w-4 text-cyan-300" />
+                <p
+                  className={`${themeClasses.text.secondary} text-base flex items-center gap-3`}
+                >
+                  <Edit3 className="h-4 w-4 text-emerald-400 animate-pulse" />
                   {isMobile
-                    ? "Tap on any image to crop it with precision zoom"
-                    : "Click on any image to crop and edit it"}
+                    ? "Tap any image to edit with precision tools"
+                    : "Click any image to edit and crop"}
                 </p>
               </div>
 
               {isMobile ? (
-                // Mobile view - enhanced list
+                // Mobile view - professional list
                 <div className="space-y-4">
                   {images.map((image, index) => (
                     <div
                       key={image.id}
-                      className="flex items-center bg-white/10 backdrop-blur-lg rounded-2xl p-4 gap-4 border border-white/20 shadow-lg"
+                      className={`flex items-center ${
+                        isDarkMode
+                          ? "bg-gradient-to-r from-slate-700/30 to-slate-600/30"
+                          : "bg-gradient-to-r from-slate-100/50 to-slate-200/50"
+                      } backdrop-blur-lg rounded-2xl p-5 gap-5 ${
+                        isDarkMode
+                          ? "border-slate-600/50"
+                          : "border-slate-300/50"
+                      } border shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]`}
                     >
                       <div className="flex-shrink-0 w-20 h-20 relative">
-                        <div className="absolute -top-2 -left-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm px-3 py-1 rounded-full font-bold z-20 shadow-lg">
+                        <div
+                          className={`absolute -top-2 -left-2 ${
+                            isDarkMode
+                              ? "bg-gradient-to-r from-slate-600 to-slate-500 text-slate-200"
+                              : "bg-gradient-to-r from-slate-500 to-slate-600 text-white"
+                          } text-sm px-3 py-1 rounded-full font-semibold z-20 shadow-lg border ${
+                            isDarkMode
+                              ? "border-slate-500/50"
+                              : "border-slate-400/50"
+                          } animate-pulse`}
+                        >
                           {index + 1}
                         </div>
                         <img
@@ -545,18 +664,24 @@ export default function ImageToPDFConverter() {
                             "/placeholder.svg"
                           }
                           alt="Preview"
-                          className="w-full h-full object-cover rounded-xl shadow-lg cursor-pointer"
+                          className={`w-full h-full object-cover rounded-xl shadow-lg cursor-pointer border ${
+                            isDarkMode
+                              ? "border-slate-600/50"
+                              : "border-slate-300/50"
+                          } transform hover:scale-110 transition-all duration-300`}
                           onClick={() => openImageEditor(image)}
                         />
                         {image.editedPreview && (
-                          <div className="absolute -top-1 -right-1 bg-green-500 text-white rounded-full p-1 z-20">
+                          <div className="absolute -top-1 -right-1 bg-emerald-500 text-white rounded-full p-1 z-20 shadow-lg animate-bounce">
                             <Edit3 className="h-3 w-3" />
                           </div>
                         )}
                       </div>
 
                       <div className="flex-grow truncate">
-                        <p className="text-white/70 text-xs truncate font-medium">
+                        <p
+                          className={`${themeClasses.text.primary} text-sm truncate font-medium`}
+                        >
                           {image.file.name}
                         </p>
                       </div>
@@ -565,7 +690,11 @@ export default function ImageToPDFConverter() {
                         <Button
                           variant="outline"
                           size="icon"
-                          className="h-10 w-10 bg-white/10 border-white/20 text-white hover:bg-white/20 rounded-xl"
+                          className={`h-10 w-10 ${
+                            isDarkMode
+                              ? "bg-slate-700/50 border-slate-600/50 text-slate-300 hover:bg-slate-600/50"
+                              : "bg-slate-200/50 border-slate-300/50 text-slate-600 hover:bg-slate-300/50"
+                          } rounded-xl transform hover:scale-110 transition-all duration-200`}
                           onClick={() => moveImageUp(index)}
                           disabled={index === 0}
                         >
@@ -575,7 +704,11 @@ export default function ImageToPDFConverter() {
                         <Button
                           variant="outline"
                           size="icon"
-                          className="h-10 w-10 bg-white/10 border-white/20 text-white hover:bg-white/20 rounded-xl"
+                          className={`h-10 w-10 ${
+                            isDarkMode
+                              ? "bg-slate-700/50 border-slate-600/50 text-slate-300 hover:bg-slate-600/50"
+                              : "bg-slate-200/50 border-slate-300/50 text-slate-600 hover:bg-slate-300/50"
+                          } rounded-xl transform hover:scale-110 transition-all duration-200`}
                           onClick={() => moveImageDown(index)}
                           disabled={index === images.length - 1}
                         >
@@ -586,7 +719,7 @@ export default function ImageToPDFConverter() {
                       <Button
                         variant="outline"
                         size="icon"
-                        className="h-10 w-10 bg-red-500/20 border-red-400/30 text-red-300 hover:bg-red-500/30 hover:text-red-200 rounded-xl"
+                        className="h-10 w-10 bg-red-900/30 border-red-700/50 text-red-400 hover:bg-red-800/40 hover:text-red-300 rounded-xl transform hover:scale-110 transition-all duration-200"
                         onClick={() => removeImage(image.id)}
                       >
                         <X className="h-4 w-4" />
@@ -595,18 +728,22 @@ export default function ImageToPDFConverter() {
                   ))}
                 </div>
               ) : (
-                // Desktop view - enhanced grid with larger images
+                // Desktop view - professional grid
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
                   {images.map((image, index) => (
                     <div
                       key={image.id}
-                      className={`relative group bg-white/10 backdrop-blur-lg rounded-2xl overflow-hidden aspect-square cursor-move transition-all duration-300 border border-white/20 shadow-lg ${
+                      className={`relative group ${
+                        isDarkMode
+                          ? "bg-gradient-to-br from-slate-700/30 to-slate-600/30 border-slate-600/50"
+                          : "bg-gradient-to-br from-slate-100/50 to-slate-200/50 border-slate-300/50"
+                      } backdrop-blur-lg rounded-2xl overflow-hidden aspect-square cursor-move transition-all duration-300 border shadow-lg ${
                         draggedIndex === index
-                          ? "opacity-50 scale-95 rotate-3"
+                          ? "opacity-50 scale-95 rotate-1"
                           : "hover:scale-105 hover:shadow-2xl"
                       } ${
                         dragOverIndex === index
-                          ? "ring-4 ring-yellow-400 ring-offset-2 ring-offset-transparent scale-110"
+                          ? "ring-2 ring-blue-400 ring-offset-2 ring-offset-transparent scale-110"
                           : ""
                       }`}
                       draggable
@@ -616,32 +753,44 @@ export default function ImageToPDFConverter() {
                       onDrop={(e) => handleImageDrop(e, index)}
                       onDragEnd={handleImageDragEnd}
                     >
-                      {/* Page number - more prominent */}
-                      <div className="absolute -top-3 -left-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-lg px-4 py-2 rounded-full font-bold z-30 shadow-lg">
+                      {/* Page number */}
+                      <div
+                        className={`absolute -top-3 -left-3 ${
+                          isDarkMode
+                            ? "bg-gradient-to-r from-slate-600 to-slate-500 text-slate-200 border-slate-500/50"
+                            : "bg-gradient-to-r from-slate-500 to-slate-600 text-white border-slate-400/50"
+                        } text-lg px-4 py-2 rounded-full font-semibold z-30 shadow-lg border animate-pulse`}
+                      >
                         {index + 1}
                       </div>
 
                       {/* Edit indicator */}
                       {image.editedPreview && (
-                        <div className="absolute -top-2 -right-2 bg-green-500 text-white rounded-full p-2 z-30 shadow-lg">
+                        <div className="absolute -top-2 -right-2 bg-emerald-500 text-white rounded-full p-2 z-30 shadow-lg animate-bounce">
                           <Edit3 className="h-4 w-4" />
                         </div>
                       )}
 
                       {/* Drag indicator */}
-                      <div className="absolute top-3 right-3 bg-black/30 backdrop-blur-sm text-white rounded-xl p-2 opacity-0 group-hover:opacity-100 transition-all duration-200 z-20">
+                      <div
+                        className={`absolute top-3 right-3 ${
+                          isDarkMode
+                            ? "bg-slate-800/70 text-slate-300"
+                            : "bg-slate-200/70 text-slate-600"
+                        } backdrop-blur-sm rounded-xl p-2 opacity-0 group-hover:opacity-100 transition-all duration-200 z-20`}
+                      >
                         <GripVertical className="h-4 w-4" />
                       </div>
 
                       {/* Edit button */}
                       <button
                         onClick={() => openImageEditor(image)}
-                        className="absolute top-12 right-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl p-2 opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-lg z-40 transform hover:scale-110"
+                        className="absolute top-12 right-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl p-2 opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-lg z-40 transform hover:scale-110"
                       >
                         <Edit3 className="h-4 w-4" />
                       </button>
 
-                      {/* Main image - full size */}
+                      {/* Main image */}
                       <img
                         src={
                           image.editedPreview ||
@@ -653,18 +802,30 @@ export default function ImageToPDFConverter() {
                       />
 
                       {/* Overlay gradient */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300" />
+                      <div
+                        className={`absolute inset-0 ${
+                          isDarkMode
+                            ? "bg-gradient-to-t from-slate-900/60"
+                            : "bg-gradient-to-t from-slate-800/60"
+                        } via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300`}
+                      />
 
                       {/* Remove button */}
                       <button
                         onClick={() => removeImage(image.id)}
-                        className="absolute top-3 right-3 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-lg z-40 transform hover:scale-110"
+                        className="absolute top-3 right-3 bg-red-600 hover:bg-red-500 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-lg z-40 transform hover:scale-110"
                       >
                         <X className="h-4 w-4" />
                       </button>
 
-                      {/* Filename - smaller and subtle */}
-                      <div className="absolute bottom-3 left-3 right-3 bg-black/30 backdrop-blur-sm text-white text-xs px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-200 truncate">
+                      {/* Filename */}
+                      <div
+                        className={`absolute bottom-3 left-3 right-3 ${
+                          isDarkMode
+                            ? "bg-slate-800/70 border-slate-700/50 text-slate-300"
+                            : "bg-slate-200/70 border-slate-300/50 text-slate-700"
+                        } backdrop-blur-sm text-xs px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-200 truncate border`}
+                      >
                         {image.file.name.length > 20
                           ? `${image.file.name.substring(0, 20)}...`
                           : image.file.name}
@@ -679,26 +840,39 @@ export default function ImageToPDFConverter() {
 
         {/* Empty State */}
         {images.length === 0 && !isConverting && (
-          <Card className="bg-white/10 backdrop-blur-lg border-white/20 shadow-2xl">
-            <CardContent className="p-16 text-center">
-              <div className="relative mb-8">
-                <FileImage className="mx-auto h-24 w-24 text-white/60" />
-                <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full animate-bounce"></div>
+          <Card className={`${themeClasses.card} backdrop-blur-xl shadow-2xl`}>
+            <CardContent className="p-20 text-center">
+              <div className="relative mb-10">
+                <FileImage
+                  className={`mx-auto h-28 w-28 ${themeClasses.text.muted} animate-pulse`}
+                />
+                <div
+                  className={`absolute -top-2 -right-2 w-6 h-6 ${
+                    isDarkMode
+                      ? "bg-gradient-to-r from-blue-500 to-indigo-500"
+                      : "bg-gradient-to-r from-blue-600 to-indigo-600"
+                  } rounded-full animate-ping`}
+                ></div>
               </div>
-              <h3 className="text-3xl font-bold text-white mb-4">
-                Ready for some magic?
+              <h3
+                className={`text-4xl font-bold ${themeClasses.text.primary} mb-6`}
+              >
+                Ready to Convert
               </h3>
-              <p className="text-white/80 text-lg">
-                Upload your images and watch them transform into a PDF!
+              <p
+                className={`${themeClasses.text.secondary} text-xl max-w-md mx-auto leading-relaxed`}
+              >
+                Upload your images to begin creating professional PDF documents
               </p>
             </CardContent>
           </Card>
         )}
 
         {/* Footer */}
-        <div className="text-center mt-12 text-white/70">
+        <div className={`text-center mt-16 ${themeClasses.text.muted}`}>
           <p className="text-lg">
-            🔒 Your images stay private - everything happens in your browser
+            🔒 Secure client-side processing - your files never leave your
+            device
           </p>
         </div>
       </div>
@@ -719,6 +893,7 @@ export default function ImageToPDFConverter() {
             );
             setEditingImage(null);
           }}
+          isDarkMode={isDarkMode}
         />
       )}
     </div>
